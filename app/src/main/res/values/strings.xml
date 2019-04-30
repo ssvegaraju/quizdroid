@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">QuizDroid</string>
+    <string name="quizOverview"> Quiz Overivew:</string>
+    <string name="outof">out of</string>
+    <string name="answeredTextDisplay">You have answered</string>
+    <string name="questionscorrectly">questions correctly.</string>
 </resources>
