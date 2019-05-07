@@ -26,7 +26,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun switchToTopicOverview(quizType: QuizType) {
-        val intent = Intent(this, TopicOverview::class.java)
+        val intent = Intent(this, QuizActivity::class.java)
         intent.putExtra("quizType", quizType)
         startActivity(intent)
     }
