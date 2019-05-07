@@ -26,7 +26,20 @@ class QuizActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.quiz)
 
-        val quizType: String = intent.extras.get("quiz").toString()
+        val quizType: QuizType = intent.extras.get("quizType") as QuizType
+
+        findViewById<TextView>(R.id.tvDesc).text = when(quizType) {
+            QuizType.Physics -> "This quiz asks about many different quirks and oddities pertaining to the field of Physics."
+            QuizType.Math -> "This quiz asks about many different tidbits and phenomena pertaining to the field of mathematics."
+            QuizType.Marvel -> "This quiz asks about some trivia tidbits pertaining to the Marvel Universe of comics."
+        } + " This quiz has 5 questions."
+        findViewById<TextView>(R.id.tvTitle).text = """$quizType ${getString(R.string.quizOverview)}"""
+
+        /*findViewById<Button>(R.id.btnBegin).setOnClickListener {
+            val intent = Intent(this, QuizActivity::class.java)
+            intent.putExtra("quiz", quiz.toString())
+            startActivity(intent)
+        }*/
 
         val questionText: TextView = findViewById<TextView>(R.id.tvQuestion)
         var radioGroup: RadioGroup = findViewById<RadioGroup>(R.id.radioGroup)
@@ -46,9 +59,9 @@ class QuizActivity : AppCompatActivity() {
         answer4.setOnClickListener {onAnswerSelected()}
 
         var quiz: Quiz = when(quizType) {
-            "Physics" -> createPhysQuiz()
-            "Math" -> createMathQuiz()
-            "Marvel" -> createMarvelQuiz()
+            QuizType.Physics -> createPhysQuiz()
+            QuizType.Math -> createMathQuiz()
+            QuizType.Marvel -> createMarvelQuiz()
             else -> Quiz(mutableListOf<Question>())
         }
         quiz.questions = quiz.questions.shuffled()

@@ -15,20 +15,7 @@ class TopicOverview : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.topic_overview)
-        val quiz: QuizType = intent.extras.get("quizType") as QuizType
 
-        findViewById<TextView>(R.id.tvDesc).text = when(quiz) {
-            QuizType.Physics -> "This quiz asks about many different quirks and oddities pertaining to the field of Physics."
-            QuizType.Math -> "This quiz asks about many different tidbits and phenomena pertaining to the field of mathematics."
-            QuizType.Marvel -> "This quiz asks about some trivia tidbits pertaining to the Marvel Universe of comics."
-        } + " This quiz has 5 questions."
-        findViewById<TextView>(R.id.tvTitle).text = """$quiz ${getString(R.string.quizOverview)}"""
-
-        findViewById<Button>(R.id.btnBegin).setOnClickListener {
-            val intent = Intent(this, QuizActivity::class.java)
-            intent.putExtra("quiz", quiz.toString())
-            startActivity(intent)
-        }
     }
 
     override fun onRestart() {
