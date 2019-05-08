@@ -1,9 +1,11 @@
 package com.dichotomyllc.quizdroid
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.opengl.Visibility
 import android.os.Bundle
+import android.support.v4.app.FragmentTransaction
 import android.support.v7.app.AppCompatActivity
 import android.text.Layout
 import android.util.Log
@@ -22,34 +24,54 @@ class QuizActivity : AppCompatActivity() {
     private var numCorrect: Int = 0
     private var correctAnswer: Int = 0
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.quiz)
+        val quizType: QuizType = intent.extras!!.get("quizType") as QuizType
 
-        val quizType: QuizType = intent.extras.get("quizType") as QuizType
+        val quiz: Quiz = when(quizType) {
+            QuizType.Physics -> createPhysQuiz()
+            QuizType.Math -> createMathQuiz()
+            QuizType.Marvel -> createMarvelQuiz()
+        }
 
-        findViewById<TextView>(R.id.tvDesc).text = when(quizType) {
-            QuizType.Physics -> "This quiz asks about many different quirks and oddities pertaining to the field of Physics."
-            QuizType.Math -> "This quiz asks about many different tidbits and phenomena pertaining to the field of mathematics."
-            QuizType.Marvel -> "This quiz asks about some trivia tidbits pertaining to the Marvel Universe of comics."
-        } + " This quiz has 5 questions."
-        findViewById<TextView>(R.id.tvTitle).text = """$quizType ${getString(R.string.quizOverview)}"""
+        val fragment = QuizOverviewFragment.newInstance(quizType.toString())
+        val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
+        ft.add(R.id.container, fragment, "QUIZ_OVERVIEW_FRAGMENT")
+        ft.commit()
+        ft.runOnCommit {
+            var descText = when (quizType) {
+                QuizType.Physics -> getString(R.string.physicsDesx)
+                QuizType.Math -> getString(R.string.mathDesc)
+                QuizType.Marvel -> getString(R.string.marvelDesc)
+            }
+            descText += " This quiz has ${quiz.questions.size} questions."
+            findViewById<TextView>(R.id.tvDesc).text = descText
+            findViewById<TextView>(R.id.tvTitle).text = """$quizType ${getString(R.string.quizOverview)}"""
 
-        /*findViewById<Button>(R.id.btnBegin).setOnClickListener {
-            val intent = Intent(this, QuizActivity::class.java)
-            intent.putExtra("quiz", quiz.toString())
-            startActivity(intent)
-        }*/
+            findViewById<Button>(R.id.btnBegin).setOnClickListener {
+                val frag = QuizFragment.newInstance(quizType.toString())
+                val fragt: FragmentTransaction = supportFragmentManager.beginTransaction()
+                fragt.replace(R.id.container, frag, "QUIZ_FRAGMENT")
+                fragt.commit()
+                fragt.runOnCommit {InitializeQuiz(quizType, quiz)}
+            }
+        }
 
-        val questionText: TextView = findViewById<TextView>(R.id.tvQuestion)
-        var radioGroup: RadioGroup = findViewById<RadioGroup>(R.id.radioGroup)
-        val answer1: RadioButton = findViewById<RadioButton>(R.id.rbtn1)
-        val answer2: RadioButton = findViewById<RadioButton>(R.id.rbtn2)
-        val answer3: RadioButton = findViewById<RadioButton>(R.id.rbtn3)
-        val answer4: RadioButton = findViewById<RadioButton>(R.id.rbtn4)
-        val submit: Button = findViewById<Button>(R.id.btnSubmit)
-        val proceed: Button = findViewById<Button>(R.id.btnProceed)
-        val correctText: TextView = findViewById<TextView>(R.id.tvAnswerDisp)
+    }
+
+    @SuppressLint("SetTextI18n")
+    fun InitializeQuiz(quizType: QuizType, quiz: Quiz) {
+        val questionText: TextView = findViewById(R.id.tvQuestion)
+        var radioGroup: RadioGroup = findViewById(R.id.radioGroup)
+        val answer1: RadioButton = findViewById(R.id.rbtn1)
+        val answer2: RadioButton = findViewById(R.id.rbtn2)
+        val answer3: RadioButton = findViewById(R.id.rbtn3)
+        val answer4: RadioButton = findViewById(R.id.rbtn4)
+        val submit: Button = findViewById(R.id.btnSubmit)
+        val proceed: Button = findViewById(R.id.btnProceed)
+        val correctText: TextView = findViewById(R.id.tvAnswerDisp)
         fun onAnswerSelected() {
             submit.visibility = View.VISIBLE
         }
@@ -58,12 +80,7 @@ class QuizActivity : AppCompatActivity() {
         answer3.setOnClickListener {onAnswerSelected()}
         answer4.setOnClickListener {onAnswerSelected()}
 
-        var quiz: Quiz = when(quizType) {
-            QuizType.Physics -> createPhysQuiz()
-            QuizType.Math -> createMathQuiz()
-            QuizType.Marvel -> createMarvelQuiz()
-            else -> Quiz(mutableListOf<Question>())
-        }
+
         quiz.questions = quiz.questions.shuffled()
 
         fun setQuestionView(question: Question) {
@@ -122,12 +139,10 @@ class QuizActivity : AppCompatActivity() {
             }
             questionNumber++
         }
-
     }
 
-
     fun createPhysQuiz(): Quiz {
-        var questions: MutableList<Question> = mutableListOf<Question>()
+        val questions: MutableList<Question> = mutableListOf<Question>()
         questions.add(Question("What does the constant 'g' refer to in Physics?",
             mutableListOf<Answer>(
                 Answer("Friction", false),
@@ -167,7 +182,7 @@ class QuizActivity : AppCompatActivity() {
     }
 
     fun createMathQuiz(): Quiz {
-        var questions: MutableList<Question> = mutableListOf<Question>()
+        val questions: MutableList<Question> = mutableListOf<Question>()
         questions.add(Question("Which is larger, the set of all even integers or the set of all integers?",
             mutableListOf<Answer>(
                 Answer("All Integers", false),
@@ -207,7 +222,7 @@ class QuizActivity : AppCompatActivity() {
     }
 
     fun createMarvelQuiz(): Quiz {
-        var questions: MutableList<Question> = mutableListOf<Question>()
+        val questions: MutableList<Question> = mutableListOf<Question>()
         questions.add(Question("How many siblings does Thor have?",
             mutableListOf<Answer>(
                 Answer("1", false),

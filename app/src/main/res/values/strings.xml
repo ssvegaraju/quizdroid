@@ -7,4 +7,12 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="physicsDesx">This quiz asks about many different quirks and oddities pertaining to the field of
+        Physics.
+    </string>
+    <string name="mathDesc">This quiz asks about many different tidbits and phenomena pertaining to the field of
+        mathematics.
+    </string>
+    <string name="marvelDesc">This quiz asks about some trivia tidbits pertaining to the Marvel Universe of comics.
+    </string>
 </resources>
