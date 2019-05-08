@@ -3,11 +3,9 @@ package com.dichotomyllc.quizdroid
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
-import android.opengl.Visibility
 import android.os.Bundle
 import android.support.v4.app.FragmentTransaction
 import android.support.v7.app.AppCompatActivity
-import android.text.Layout
 import android.util.Log
 import android.view.View
 import android.widget.Button
@@ -30,39 +28,31 @@ class QuizActivity : AppCompatActivity() {
         setContentView(R.layout.quiz)
         val quizType: QuizType = intent.extras!!.get("quizType") as QuizType
 
-        val quiz: Quiz = when(quizType) {
-            QuizType.Physics -> createPhysQuiz()
-            QuizType.Math -> createMathQuiz()
-            QuizType.Marvel -> createMarvelQuiz()
-        }
+        val topicQuiz: TopicRepository = QuizApp.instance.getTopic(quizType)
 
         val fragment = QuizOverviewFragment.newInstance(quizType.toString())
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
         ft.add(R.id.container, fragment, "QUIZ_OVERVIEW_FRAGMENT")
         ft.commit()
         ft.runOnCommit {
-            var descText = when (quizType) {
-                QuizType.Physics -> getString(R.string.physicsDesx)
-                QuizType.Math -> getString(R.string.mathDesc)
-                QuizType.Marvel -> getString(R.string.marvelDesc)
-            }
-            descText += " This quiz has ${quiz.questions.size} questions."
-            findViewById<TextView>(R.id.tvDesc).text = descText
-            findViewById<TextView>(R.id.tvTitle).text = """$quizType ${getString(R.string.quizOverview)}"""
+            var desc = topicQuiz.topic.longDesc
+            desc += "This quiz has ${topicQuiz.quiz.questions.size} questions."
+            findViewById<TextView>(R.id.tvDesc).text = desc
+            findViewById<TextView>(R.id.tvTitle).text = """${topicQuiz.topic.title} ${getString(R.string.quizOverview)}"""
 
             findViewById<Button>(R.id.btnBegin).setOnClickListener {
                 val frag = QuizFragment.newInstance(quizType.toString())
                 val fragt: FragmentTransaction = supportFragmentManager.beginTransaction()
                 fragt.replace(R.id.container, frag, "QUIZ_FRAGMENT")
                 fragt.commit()
-                fragt.runOnCommit {InitializeQuiz(quizType, quiz)}
+                fragt.runOnCommit {InitializeQuiz(topicQuiz.quiz)}
             }
         }
 
     }
 
     @SuppressLint("SetTextI18n")
-    fun InitializeQuiz(quizType: QuizType, quiz: Quiz) {
+    fun InitializeQuiz(quiz: Quiz) {
         val questionText: TextView = findViewById(R.id.tvQuestion)
         var radioGroup: RadioGroup = findViewById(R.id.radioGroup)
         val answer1: RadioButton = findViewById(R.id.rbtn1)
@@ -103,6 +93,10 @@ class QuizActivity : AppCompatActivity() {
         questionNumber++;
 
         submit.setOnClickListener {
+            answer1.isClickable = false
+            answer2.isClickable = false
+            answer3.isClickable = false
+            answer4.isClickable = false
             submit.visibility = View.INVISIBLE
             chosenAnswer = radioGroup.checkedRadioButtonId
             if (chosenAnswer == correctAnswer) {
@@ -115,7 +109,7 @@ class QuizActivity : AppCompatActivity() {
                 """${getString(R.string.answeredTextDisplay)} $numCorrect ${getString(R.string.outof)} $questionNumber ${getString(
                     R.string.questionscorrectly
                 )}""".trim()
-            if (questionNumber == 5) {
+            if (questionNumber == quiz.questions.size) {
                 proceed.text = "Finish"
             } else {
                 proceed.text = "Next"
@@ -125,13 +119,17 @@ class QuizActivity : AppCompatActivity() {
         }
 
         proceed.setOnClickListener {
+            answer1.isClickable = true
+            answer2.isClickable = true
+            answer3.isClickable = true
+            answer4.isClickable = true
             radioGroup.clearCheck()
             findViewById<RadioButton>(correctAnswer).setBackgroundColor(Color.TRANSPARENT)
             findViewById<RadioButton>(chosenAnswer).setBackgroundColor(Color.TRANSPARENT)
             correctText.visibility = View.INVISIBLE
             proceed.visibility = View.INVISIBLE
             submit.visibility = View.INVISIBLE
-            if (questionNumber == 5) {
+            if (questionNumber == quiz.questions.size) {
                 val intent = Intent(this, MainActivity::class.java)
                 startActivity(intent)
             } else {
@@ -139,126 +137,6 @@ class QuizActivity : AppCompatActivity() {
             }
             questionNumber++
         }
-    }
-
-    fun createPhysQuiz(): Quiz {
-        val questions: MutableList<Question> = mutableListOf<Question>()
-        questions.add(Question("What does the constant 'g' refer to in Physics?",
-            mutableListOf<Answer>(
-                Answer("Friction", false),
-                Answer("Gravity", true),
-                Answer("Gimbal Lock", false),
-                Answer("Torque", false)
-                )))
-        questions.add(Question("What does 'F=ma' stand for?",
-            mutableListOf<Answer>(
-                Answer("Friction = momentum * acceleration", false),
-                Answer("Force = mass * acceleration", true),
-                Answer("Force = momentum * acceleration", false),
-                Answer("Friction = mass * acceleration", false)
-            )))
-        questions.add(Question("Which would fall faster: a bowling ball or a feather?",
-            mutableListOf<Answer>(
-                Answer("Feather", false),
-                Answer("Bowling ball", true),
-                Answer("Both would fall at the same rate", false),
-                Answer("None of these", false)
-            )))
-        questions.add(Question("Who came up with the Theory of Relativity?",
-            mutableListOf<Answer>(
-                Answer("Isaac Newton", false),
-                Answer("Albert Einstein", true),
-                Answer("Thomas Edison", false),
-                Answer("Shaq", false)
-            )))
-        questions.add(Question("What is the SI unit of weight?",
-            mutableListOf<Answer>(
-                Answer("Kilograms", false),
-                Answer("Newtons", true),
-                Answer("Pounds", false),
-                Answer("Absolute Unit", false)
-            )))
-        return Quiz(questions)
-    }
-
-    fun createMathQuiz(): Quiz {
-        val questions: MutableList<Question> = mutableListOf<Question>()
-        questions.add(Question("Which is larger, the set of all even integers or the set of all integers?",
-            mutableListOf<Answer>(
-                Answer("All Integers", false),
-                Answer("They are the same size", true),
-                Answer("Even Integers", false),
-                Answer("None of these", false)
-            )))
-        questions.add(Question("How many solutions does a first order Differential Equation have?",
-            mutableListOf<Answer>(
-                Answer("1", false),
-                Answer("Infinitely Many", true),
-                Answer("2", false),
-                Answer("Not enough information", false)
-            )))
-        questions.add(Question("What does the series 1 + 0.5 + 0.25 + ... converge to?",
-            mutableListOf<Answer>(
-                Answer("Infinity", false),
-                Answer("2", true),
-                Answer("3", false),
-                Answer("2.5", false)
-            )))
-        questions.add(Question("Who invented Calculus?",
-            mutableListOf<Answer>(
-                Answer("Gottfried Leibniz", false),
-                Answer("Both of these dudes", true),
-                Answer("Isaac Newton", false),
-                Answer("None of these dudes", false)
-            )))
-        questions.add(Question("Which is larger, the set of all rational numbers or the set of all irrational numbers?",
-            mutableListOf<Answer>(
-                Answer("All rational numbers", false),
-                Answer("All irrational numbers", true),
-                Answer("None of these", false),
-                Answer("They are the same size", false)
-            )))
-        return Quiz(questions)
-    }
-
-    fun createMarvelQuiz(): Quiz {
-        val questions: MutableList<Question> = mutableListOf<Question>()
-        questions.add(Question("How many siblings does Thor have?",
-            mutableListOf<Answer>(
-                Answer("1", false),
-                Answer("2", true),
-                Answer("3", false),
-                Answer("4", false)
-            )))
-        questions.add(Question("What is Spiderman's real name?",
-            mutableListOf<Answer>(
-                Answer("Pepper Potts", false),
-                Answer("Peter Parker", true),
-                Answer("Peter Stark", false),
-                Answer("Tony Stark", false)
-            )))
-        questions.add(Question("Who does Doctor Strange fight against countless times?",
-            mutableListOf<Answer>(
-                Answer("The Ancient One", false),
-                Answer("Dormamu", true),
-                Answer("Thanos", false),
-                Answer("Crippling depression at the loss of his hands", false)
-            )))
-        questions.add(Question("Which stone does Vision have as his core?",
-            mutableListOf<Answer>(
-                Answer("The Soul Stone", false),
-                Answer("The Mind Stone", true),
-                Answer("The Vision Stone", false),
-                Answer("The Reality Stone", false)
-            )))
-        questions.add(Question("How long was Captain America frozen in ice?",
-            mutableListOf<Answer>(
-                Answer("45 years", false),
-                Answer("70 years", true),
-                Answer("75 years", false),
-                Answer("100 years", false)
-            )))
-        return Quiz(questions)
     }
 
     override fun onRestart() {
