@@ -26,26 +26,25 @@ class QuizActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.quiz)
-        val quizType: QuizType = intent.extras!!.get("quizType") as QuizType
+        val quizType: String = intent.extras!!.get("quizType") as String
 
-        val topicQuiz: TopicRepository = QuizApp.instance.getTopic(quizType)
+        val topicQuiz: Topic = QuizApp.instance.topicRepo.getTopic((quizType))
 
-        val fragment = QuizOverviewFragment.newInstance(quizType.toString())
+        val fragment = QuizOverviewFragment.newInstance(quizType)
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
         ft.add(R.id.container, fragment, "QUIZ_OVERVIEW_FRAGMENT")
         ft.commit()
         ft.runOnCommit {
-            var desc = topicQuiz.topic.longDesc
-            desc += "This quiz has ${topicQuiz.quiz.questions.size} questions."
+            var desc = topicQuiz.longDesc
             findViewById<TextView>(R.id.tvDesc).text = desc
-            findViewById<TextView>(R.id.tvTitle).text = """${topicQuiz.topic.title} ${getString(R.string.quizOverview)}"""
+            findViewById<TextView>(R.id.tvTitle).text = """${topicQuiz.title} ${getString(R.string.quizOverview)}"""
 
             findViewById<Button>(R.id.btnBegin).setOnClickListener {
                 val frag = QuizFragment.newInstance(quizType.toString())
                 val fragt: FragmentTransaction = supportFragmentManager.beginTransaction()
                 fragt.replace(R.id.container, frag, "QUIZ_FRAGMENT")
                 fragt.commit()
-                fragt.runOnCommit {InitializeQuiz(topicQuiz.quiz)}
+                fragt.runOnCommit {InitializeQuiz(QuizApp.instance.topicRepo.loadQuiz(topicQuiz))}
             }
         }
 

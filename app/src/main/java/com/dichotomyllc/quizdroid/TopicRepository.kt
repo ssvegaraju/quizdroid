@@ -1,8 +1,27 @@
 package com.dichotomyllc.quizdroid
 
+import android.os.Environment
+import android.util.Log
+import java.io.*
+import org.json.JSONArray
+import org.json.JSONObject
+import android.R.attr.name
+import android.R.id
+import android.R.array
+
+
+
+
 interface TopicRepository {
-    var quiz: Quiz
-    var topic: Topic
+    var topics: Map<Topic, Quiz>
+
+    fun getTopicList() : List<Topic>
+
+    fun getTopic(quizType: String) : Topic
+
+    fun loadQuiz(quizType: String) : Quiz
+
+    fun loadQuiz(topic: Topic) : Quiz
 }
 
 class Topic(_title: String, _shortDesc: String, _longDesc: String) {
@@ -11,32 +30,93 @@ class Topic(_title: String, _shortDesc: String, _longDesc: String) {
     val longDesc = _longDesc
 }
 
-class TopicQuiz(quizType: QuizType) : TopicRepository {
-    override lateinit var topic: Topic
-    override lateinit var quiz: Quiz
+class TopicQuiz : TopicRepository {
+    override lateinit var topics: Map<Topic, Quiz>
+
+    private val TAG = "TopicQuiz"
 
     init {
-        when (quizType) {
-            QuizType.Physics ->{
-                topic = Topic(quizType.toString(), "Questions about how the world works.",
-                    QuizApp.instance.getString(R.string.physicsDesx))
-                quiz = createPhysQuiz()
+        topics = getJson()
+        Log.v(TAG, topics.size.toString())
+    }
+
+    override fun loadQuiz(quizType: String): Quiz {
+        val key = topics.keys.single{it.title.contains(quizType)}
+        return topics.getValue(key)
+    }
+
+    override fun loadQuiz(topic: Topic) : Quiz {
+        return topics.getValue(topic)
+    }
+
+    override fun getTopic(quizType: String) : Topic {
+        return topics.keys.single{it.title.contains(quizType)}
+    }
+
+    override fun getTopicList() : List<Topic> {
+        return topics.keys.toList()
+    }
+
+    private fun getJson() : Map<Topic, Quiz> {
+        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        val file = downloads.listFiles().single{it.name.contains("questions.json")}
+        val jsonString: String = getStringFromFile(file.absolutePath)
+        val base = JSONArray(jsonString)
+        var topicList: Map<Topic, Quiz> = mutableMapOf()
+        for (i in 0 until base.length()) {
+            val title = base.getJSONObject(i).getString("title")
+            val desc = base.getJSONObject(i).getString("desc")
+            val questions = base.getJSONObject(i).getJSONArray("questions")
+            val quizQuestions = mutableListOf<Question>()
+            for (j in 0 until questions.length()) {
+                val q = questions.getJSONObject(j).getString("text")
+                val correctIndex = questions.getJSONObject(j).getString("answer").toInt() - 1
+                val answers = questions.getJSONObject(j).getJSONArray("answers")
+                val quizAnswers = mutableListOf<Answer>()
+                for (k in 0 until answers.length()) {
+                    quizAnswers.add(Answer(answers.getString(k), correctIndex == k))
+                }
+                quizQuestions.add(Question(q, quizAnswers))
             }
-            QuizType.Math ->{
-                topic = Topic(quizType.toString(), "Questions about how numbers work.",
-                    QuizApp.instance.getString(R.string.physicsDesx))
-                quiz = createMathQuiz()
-            }
-            QuizType.Marvel ->{
-                topic = Topic(quizType.toString(), "Questions about comic superheroes.",
-                    QuizApp.instance.getString(R.string.physicsDesx))
-                quiz = createMarvelQuiz()
-            }
+            topicList = topicList.plus(Pair(Topic(title, desc, desc +
+            "This quiz has ${quizQuestions.size} questions."), Quiz(quizQuestions)))
         }
+        Log.v(TAG, "list" + topicList.size)
+        return topicList
+    }
+
+    @Throws(IOException::class)
+    fun convertStreamToString(`is`: InputStream): String {
+        // http://www.java2s.com/Code/Java/File-Input-Output/ConvertInputStreamtoString.htm
+        val reader = BufferedReader(InputStreamReader(`is`))
+        val sb = StringBuilder()
+        var line: String? = reader.readLine()
+        var firstLine: Boolean? = true
+        while ((line) != null) {
+            if (firstLine!!) {
+                sb.append(line)
+                firstLine = false
+            } else {
+                sb.append("\n").append(line)
+            }
+            line = reader.readLine()
+        }
+        reader.close()
+        return sb.toString()
+    }
+
+    @Throws(IOException::class)
+    fun getStringFromFile(filePath: String): String {
+        val fl = File(filePath)
+        val fin = FileInputStream(fl)
+        val ret = convertStreamToString(fin)
+        //Make sure you close all streams.
+        fin.close()
+        return ret
     }
 
 
-    fun createPhysQuiz(): Quiz {
+    private fun createPhysQuiz(): Quiz {
         val questions: MutableList<Question> = mutableListOf<Question>()
         questions.add(Question("What does the constant 'g' refer to in Physics?",
             mutableListOf<Answer>(
@@ -76,7 +156,7 @@ class TopicQuiz(quizType: QuizType) : TopicRepository {
         return Quiz(questions)
     }
 
-    fun createMathQuiz(): Quiz {
+    private fun createMathQuiz(): Quiz {
         val questions: MutableList<Question> = mutableListOf<Question>()
         questions.add(Question("Which is larger, the set of all even integers or the set of all integers?",
             mutableListOf<Answer>(
@@ -116,7 +196,7 @@ class TopicQuiz(quizType: QuizType) : TopicRepository {
         return Quiz(questions)
     }
 
-    fun createMarvelQuiz(): Quiz {
+    private fun createMarvelQuiz(): Quiz {
         val questions: MutableList<Question> = mutableListOf<Question>()
         questions.add(Question("How many siblings does Thor have?",
             mutableListOf<Answer>(

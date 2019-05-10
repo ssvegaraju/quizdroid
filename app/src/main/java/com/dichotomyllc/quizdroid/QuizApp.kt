@@ -6,18 +6,14 @@ import android.util.Log
 class QuizApp : Application() {
 
     private val TAG = "QuizApp"
-    var topics: List<TopicRepository> = listOf()
+    var topicRepo: TopicRepository = TopicQuiz()
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
-        // Hardcoding in topics for now, these will eventually be drawn from some other source.
-        topics = listOf(TopicQuiz(QuizType.Physics), TopicQuiz(QuizType.Math), TopicQuiz(QuizType.Marvel))
         Log.v(TAG, "Created quiz app...")
-    }
-
-    fun getTopic(quizType: QuizType) : TopicRepository {
-        return topics.single {it.topic.title == quizType.toString()}
+        topicRepo = TopicQuiz()
+        Log.v(TAG, topicRepo.topics.size.toString())
+        instance = this
     }
 
     companion object {
