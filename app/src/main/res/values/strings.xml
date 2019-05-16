@@ -15,4 +15,6 @@
     </string>
     <string name="marvelDesc">This quiz asks about some trivia tidbits pertaining to the Marvel Universe of comics.
     </string>
+    <string name="preferences">Preferences</string>
+    <string name="topicsTitle">Topics</string>
 </resources>

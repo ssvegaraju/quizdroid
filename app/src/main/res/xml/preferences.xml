@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:key="downloadURL"
+        android:title="Download URL:"
+        android:inputType="textUri"
+        android:theme="@style/Theme.AppCompat.DayNight"
+        android:defaultValue="http://tednewardsandbox.site44.com/questions.json">
+
+    </EditTextPreference>
+    <EditTextPreference
+        android:key="minutes"
+        android:title="Minutes between DL:"
+        android:defaultValue="5"
+        android:theme="@style/Theme.AppCompat.DayNight"
+        android:inputType="number">
+
+    </EditTextPreference>
+</PreferenceScreen>
