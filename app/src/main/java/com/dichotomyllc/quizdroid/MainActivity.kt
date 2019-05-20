@@ -1,6 +1,7 @@
 package com.dichotomyllc.quizdroid
 
 import android.content.Intent
+import android.content.SharedPreferences
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.Fragment
@@ -20,23 +21,17 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // start background service to download questions.json
+        val intent: Intent = Intent(this, QuestionService::class.java).also {
+            startService(it)
+        }
+
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
         ft.add(R.id.fragmentContainer, fragment, "TOPICS_DISPLAY_FRAGMENT")
         ft.commit()
         ft.runOnCommit {
-            val topics = QuizApp.instance.topicRepo.getTopicList()
-
-            for (i in 0 until topics.size) {
-                Log.v(TAG, topics[i].title)
-                val constraintLayout = findViewById<LinearLayout>(R.id.linearLayout)
-                val button = Button(this)
-                button.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                button.text = topics[i].title
-                button.setOnClickListener {
-                    switchToTopicOverview(topics[i].title)
-                }
-                constraintLayout.addView(button)
-            }
+            loadTopics()
         }
 
     }
@@ -47,11 +42,35 @@ class MainActivity : AppCompatActivity() {
                 val ft = supportFragmentManager.beginTransaction()
                 ft.replace(R.id.fragmentContainer, Preferences())
                 ft.commit()
+                supportActionBar!!.setDisplayHomeAsUpEnabled(true)
                 true
             }
             else -> {
+                val ft = supportFragmentManager.beginTransaction()
+                ft.replace(R.id.fragmentContainer, TopicsDisplayFragment())
+                ft.commit()
+                supportActionBar!!.setDisplayHomeAsUpEnabled(false)
+                ft.runOnCommit{
+                    loadTopics()
+                }
                 false
             }
+        }
+    }
+
+    private fun loadTopics() {
+        val topics = QuizApp.instance.topicRepo.getTopicList()
+
+        for (i in 0 until topics.size) {
+            Log.v(TAG, topics[i].title)
+            val constraintLayout = findViewById<LinearLayout>(R.id.linearLayout)
+            val button = Button(this)
+            button.layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            button.text = topics[i].title
+            button.setOnClickListener {
+                switchToTopicOverview(topics[i].title)
+            }
+            constraintLayout.addView(button)
         }
     }
 

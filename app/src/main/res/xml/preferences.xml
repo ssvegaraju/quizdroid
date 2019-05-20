@@ -10,11 +10,11 @@
 
     </EditTextPreference>
     <EditTextPreference
-        android:key="minutes"
-        android:title="Minutes between DL:"
         android:defaultValue="5"
+        android:inputType="number"
+        android:key="minutes"
         android:theme="@style/Theme.AppCompat.DayNight"
-        android:inputType="number">
+        android:title="Minutes between DL:">
 
     </EditTextPreference>
 </PreferenceScreen>
