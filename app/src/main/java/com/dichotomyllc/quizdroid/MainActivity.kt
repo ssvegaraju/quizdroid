@@ -22,16 +22,16 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // start background service to download questions.json
-        val intent: Intent = Intent(this, QuestionService::class.java).also {
-            startService(it)
-        }
 
         val ft: FragmentTransaction = supportFragmentManager.beginTransaction()
         ft.add(R.id.fragmentContainer, fragment, "TOPICS_DISPLAY_FRAGMENT")
         ft.commit()
         ft.runOnCommit {
             loadTopics()
+        }
+        // start background service to download questions.json
+        val intent: Intent = Intent(this, QuestionService::class.java).also {
+            startService(it)
         }
 
     }

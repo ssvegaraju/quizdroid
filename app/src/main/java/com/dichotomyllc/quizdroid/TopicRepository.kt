@@ -1,15 +1,8 @@
 package com.dichotomyllc.quizdroid
 
-import android.os.Environment
 import android.util.Log
 import java.io.*
 import org.json.JSONArray
-import org.json.JSONObject
-import android.R.attr.name
-import android.R.id
-import android.R.array
-
-
 
 
 interface TopicRepository {
@@ -34,7 +27,6 @@ class TopicQuiz : TopicRepository {
     override lateinit var topics: Map<Topic, Quiz>
 
     private val TAG = "TopicQuiz"
-
     init {
         topics = getJson()
         Log.v(TAG, topics.size.toString())
@@ -58,10 +50,7 @@ class TopicQuiz : TopicRepository {
     }
 
     private fun getJson() : Map<Topic, Quiz> {
-        val downloads = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
-        val file = downloads.listFiles().single{it.name.contains("questions.json")}
-        val jsonString: String = getStringFromFile(file.absolutePath)
-        val base = JSONArray(jsonString)
+        val base = JSONArray(QuizApp.getQuestionsFromFile())
         var topicList: Map<Topic, Quiz> = mutableMapOf()
         for (i in 0 until base.length()) {
             val title = base.getJSONObject(i).getString("title")
@@ -85,38 +74,7 @@ class TopicQuiz : TopicRepository {
         return topicList
     }
 
-    @Throws(IOException::class)
-    fun convertStreamToString(`is`: InputStream): String {
-        // http://www.java2s.com/Code/Java/File-Input-Output/ConvertInputStreamtoString.htm
-        val reader = BufferedReader(InputStreamReader(`is`))
-        val sb = StringBuilder()
-        var line: String? = reader.readLine()
-        var firstLine: Boolean? = true
-        while ((line) != null) {
-            if (firstLine!!) {
-                sb.append(line)
-                firstLine = false
-            } else {
-                sb.append("\n").append(line)
-            }
-            line = reader.readLine()
-        }
-        reader.close()
-        return sb.toString()
-    }
-
-    @Throws(IOException::class)
-    fun getStringFromFile(filePath: String): String {
-        val fl = File(filePath)
-        val fin = FileInputStream(fl)
-        val ret = convertStreamToString(fin)
-        //Make sure you close all streams.
-        fin.close()
-        return ret
-    }
-
-
-    private fun createPhysQuiz(): Quiz {
+    /*private fun createPhysQuiz(): Quiz {
         val questions: MutableList<Question> = mutableListOf<Question>()
         questions.add(Question("What does the constant 'g' refer to in Physics?",
             mutableListOf<Answer>(
@@ -234,5 +192,5 @@ class TopicQuiz : TopicRepository {
                 Answer("100 years", false)
             )))
         return Quiz(questions)
-    }
+    }*/
 }
